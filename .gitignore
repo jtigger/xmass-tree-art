@@ -1,0 +1,11 @@
+# Ignore macOS metadata
+.DS_Store
+
+# Ignore IDE files
+.vscode
+
+# Ignore symbol files
+*.dSYM
+
+# ignore the hello executable
+hello
