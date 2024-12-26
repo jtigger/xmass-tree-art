@@ -13,7 +13,7 @@ void canvas_wipe(char canvas[CANVAS_HEIGHT][CANVAS_WIDTH]);
 void canvas_write(char canvas[CANVAS_HEIGHT][CANVAS_WIDTH], int rel_row, int rel_col, char c);
 
 // Write a tree to the canvas at the given height.
-void canvas_write_tree(char canvas[CANVAS_HEIGHT][CANVAS_WIDTH], int height);
+void canvas_write_tree(char canvas[CANVAS_HEIGHT][CANVAS_WIDTH], int x, int y, int height);
 
 int main()
 {
@@ -22,7 +22,7 @@ int main()
     printf("Merry Christmas!\n");
 
     canvas_wipe(canvas);
-    canvas_write_tree(canvas, 7);
+    canvas_write_tree(canvas, 0, 0, 7);
     canvas_print(canvas);
 
     return 0;
@@ -59,7 +59,7 @@ void canvas_write(char canvas[CANVAS_HEIGHT][CANVAS_WIDTH], int rel_row, int rel
     }
 }
 
-void canvas_write_tree(char canvas[CANVAS_HEIGHT][CANVAS_WIDTH], int height)
+void canvas_write_tree(char canvas[CANVAS_HEIGHT][CANVAS_WIDTH], int x, int y, int height)
 {
     int width = 2 * height - 1;
 
@@ -71,7 +71,7 @@ void canvas_write_tree(char canvas[CANVAS_HEIGHT][CANVAS_WIDTH], int height)
         int rel_col = height - rel_row - 1;
         for (int j = 0; j < tree_pixels; j++, rel_col++)
         {
-            canvas_write(canvas, rel_row, rel_col, '*');
+            canvas_write(canvas, rel_row + y, rel_col + x, '*');
         }
     }
 
@@ -81,24 +81,24 @@ void canvas_write_tree(char canvas[CANVAS_HEIGHT][CANVAS_WIDTH], int height)
 
     int rel_col = start_of_trunk - 1;
 
-    canvas_write(canvas, rel_row, rel_col, '|');
+    canvas_write(canvas, rel_row + y, rel_col + x, '|');
     rel_col++;
 
     for (int i = start_of_trunk; i < end_of_trunk; i++, rel_col++)
     {
-        canvas_write(canvas, rel_row, rel_col, ' ');
+        canvas_write(canvas, rel_row + y, rel_col + x, ' ');
     }
-    canvas_write(canvas, rel_row, rel_col, '|');
+    canvas_write(canvas, rel_row + y, rel_col + x, '|');
     rel_col++;
     rel_row++;
 
     rel_col = start_of_trunk - 1 - 1;
-    canvas_write(canvas, rel_row, rel_col, '[');
+    canvas_write(canvas, rel_row + y, rel_col + x, '[');
     rel_col++;
     for (int i = start_of_trunk - 1; i < end_of_trunk + 1; i++, rel_col++)
     {
-        canvas_write(canvas, rel_row, rel_col, '_');
+        canvas_write(canvas, rel_row + y, rel_col + x, '_');
     }
-    canvas_write(canvas, rel_row, rel_col, ']');
+    canvas_write(canvas, rel_row + y, rel_col + x, ']');
     rel_col++;
 }
