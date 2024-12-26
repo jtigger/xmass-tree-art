@@ -7,12 +7,22 @@
 // Struct to represent a tree.
 typedef struct
 {
-    int x;
-    int y;
-    int height;
-    char leaf_char;
+    int x, y;        // position of the tree on the canvas
+    int height;      // height of the leafy part of the tree
+    char leaf_char;  // character to use for the leaves
 } Tree;
 
+typedef struct FutureTree FutureTree;
+struct FutureTree
+{
+    Tree desired;            // the to-be state of the tree
+    int when;                // when (in ms since the start) this state should be applied to the canvas
+    FutureTree* next; // the next state to be applied to the canvas
+};
+
+// ==============
+// = Canvas
+// ==============
 
 // Print the canvas to the console.
 void canvas_print(char canvas[CANVAS_HEIGHT][CANVAS_WIDTH]);
@@ -29,6 +39,12 @@ void canvas_write_tree(char canvas[CANVAS_HEIGHT][CANVAS_WIDTH], Tree tree);
 // Reposition the cursor to the top left corner of the canvas.
 void reset_cursor();
 
+// ==============
+// = Realizer
+// ==============
+
+// Play the sequence of future trees at the appropriate moments.
+void realize(char canvas[CANVAS_HEIGHT][CANVAS_WIDTH], FutureTree* future_tree);
 
 int main()
 {
@@ -38,15 +54,14 @@ int main()
     Tree tree2 = {11, 2, 6, '.'};
     Tree tree3 = {3, 7, 10, '.'};
 
+    FutureTree place_third_tree = {tree3, 2000, NULL};
+    FutureTree place_second_tree = {tree2, 1000, &place_third_tree};
+    FutureTree the_beginning = {tree1, 0, &place_second_tree};
+
     printf("Merry Christmas!\n\n");
 
     canvas_wipe(canvas);
-    canvas_write_tree(canvas, tree1);
-    canvas_write_tree(canvas, tree2);
-    canvas_write_tree(canvas, tree3);
-    canvas_print(canvas);
-    reset_cursor();
-    canvas_print(canvas);
+    realize(canvas, &the_beginning);
 
     return 0;
 }
@@ -131,3 +146,25 @@ void canvas_write_tree(char canvas[CANVAS_HEIGHT][CANVAS_WIDTH], Tree tree)
     canvas_write(canvas, rel_row + tree.y, rel_col + tree.x, ']');
     rel_col++;
 }
+
+void realize(char canvas[CANVAS_HEIGHT][CANVAS_WIDTH], FutureTree* future_tree)
+{
+    int now = 0;
+
+    while (future_tree != NULL)
+    {
+        if (now >= future_tree->when)
+        {
+            canvas_write_tree(canvas, future_tree->desired);
+            canvas_print(canvas);
+            reset_cursor();
+            future_tree = future_tree->next;
+        }
+        else
+        {
+            usleep(500000);
+            now += 500;
+        }
+    }
+}
+
