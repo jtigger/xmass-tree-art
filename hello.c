@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <unistd.h>
 
 #define CANVAS_HEIGHT 20
@@ -46,6 +47,9 @@ void reset_cursor();
 // Play the sequence of future trees at the appropriate moments.
 void realize(char canvas[CANVAS_HEIGHT][CANVAS_WIDTH], FutureTree* future_tree);
 
+FutureTree* start_with(Tree tree);
+FutureTree* and_then(FutureTree* future_tree, int delay, Tree tree);
+
 int main()
 {
     char canvas[CANVAS_HEIGHT][CANVAS_WIDTH];
@@ -53,15 +57,27 @@ int main()
     Tree tree1 = {0, 0, 7, '.'};
     Tree tree2 = {11, 2, 6, '.'};
     Tree tree3 = {3, 7, 10, '.'};
+    Tree tree1_lit = {0, 0, 7, '*'};
+    Tree tree2_lit = {11, 2, 6, '*'};
+    Tree tree3_lit = {3, 7, 10, '*'};
 
-    FutureTree place_third_tree = {tree3, 2000, NULL};
-    FutureTree place_second_tree = {tree2, 1000, &place_third_tree};
-    FutureTree the_beginning = {tree1, 0, &place_second_tree};
+    FutureTree* the_beginning = start_with(tree1);
+    FutureTree* then_next;
+
+    then_next = and_then(the_beginning, 1000, tree2);
+    then_next = and_then(then_next, 1000, tree3);
+    then_next = and_then(then_next, 2000, tree3_lit);
+    then_next = and_then(then_next, 250, tree3);
+    then_next = and_then(then_next, 2500, tree3_lit);
+    then_next = and_then(then_next, 250, tree3);
+    then_next = and_then(then_next, 3000, tree3_lit);
+    then_next = and_then(then_next, 250, tree3);
+
 
     printf("Merry Christmas!\n\n");
 
     canvas_wipe(canvas);
-    realize(canvas, &the_beginning);
+    realize(canvas, the_beginning);
 
     return 0;
 }
@@ -162,9 +178,30 @@ void realize(char canvas[CANVAS_HEIGHT][CANVAS_WIDTH], FutureTree* future_tree)
         }
         else
         {
-            usleep(500000);
-            now += 500;
+            usleep(100000);
+            now += 100;
         }
     }
 }
 
+FutureTree* from(Tree tree, int delay)
+{
+    FutureTree* first_tree = (FutureTree*)malloc(sizeof(FutureTree));
+    first_tree->desired = tree;
+    first_tree->when = delay;
+    first_tree->next = NULL;
+    return first_tree;
+}
+
+FutureTree* start_with(Tree tree)
+{
+    return from(tree, 0);
+}
+
+FutureTree* and_then(FutureTree* curr_tree, int delay, Tree tree)
+{
+    FutureTree* next_future_tree = from(tree, curr_tree->when + delay);
+    curr_tree->next = next_future_tree;
+
+    return next_future_tree;
+}
