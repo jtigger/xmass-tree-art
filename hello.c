@@ -4,32 +4,16 @@
 #define CANVAS_WIDTH 13
 
 // Write a character to the canvas at the given position, if it is within the canvas bounds.
-void canvas_write(char canvas[CANVAS_HEIGHT][CANVAS_WIDTH], int scan_row, int scan_col, char c)
+void canvas_write(char canvas[CANVAS_HEIGHT][CANVAS_WIDTH], int rel_row, int rel_col, char c)
 {
-    if (scan_row >= 0 && scan_row < CANVAS_HEIGHT && scan_col >= 0 && scan_col < CANVAS_WIDTH)
+    if (rel_row >= 0 && rel_row < CANVAS_HEIGHT && rel_col >= 0 && rel_col < CANVAS_WIDTH)
     {
-        canvas[scan_row][scan_col] = c;
+        canvas[rel_row][rel_col] = c;
     }
 }
 
-int main()
+void canvas_wipe(char canvas[CANVAS_HEIGHT][CANVAS_WIDTH])
 {
-    printf("Merry Christmas!\n");
-
-    printf("      *\n");
-    printf("     ***\n");
-    printf("    *****\n");
-    printf("   *******\n");
-    printf("  *********\n");
-    printf(" ***********\n");
-    printf("*************\n");
-    printf("     | |\n");
-    printf("    [___]\n");
-
-    printf("\n-----\n\n");
-
-    char canvas[CANVAS_HEIGHT][CANVAS_WIDTH];
-
     for (int i = 0; i < CANVAS_HEIGHT; i++)
     {
         for (int j = 0; j < CANVAS_WIDTH; j++)
@@ -37,19 +21,21 @@ int main()
             canvas[i][j] = ' ';
         }
     }
+}
 
-    int height = 7;
+void canvas_write_tree(char canvas[CANVAS_HEIGHT][CANVAS_WIDTH], int height)
+{
     int width = 2 * height - 1;
 
-    int scan_row = 0;
+    int rel_row = 0;
 
-    for (int row = 0; row < height; row++, scan_row++)
+    for (rel_row = 0; rel_row < height; rel_row++)
     {
-        int tree_pixels = 2 * row + 1;
-        int scan_col = height - row - 1;
-        for (int j = 0; j < tree_pixels; j++, scan_col++)
+        int tree_pixels = 2 * rel_row + 1;
+        int rel_col = height - rel_row - 1;
+        for (int j = 0; j < tree_pixels; j++, rel_col++)
         {
-            canvas_write(canvas, scan_row, scan_col, '*');
+            canvas_write(canvas, rel_row, rel_col, '*');
         }
     }
 
@@ -57,30 +43,32 @@ int main()
     int thickness_of_trunk = 1;
     int end_of_trunk = start_of_trunk + thickness_of_trunk;
 
-    int scan_col = 0;
-    scan_col = start_of_trunk - 1;
+    int rel_col = start_of_trunk - 1;
 
-    canvas_write(canvas, scan_row, scan_col, '|');
-    scan_col++;
+    canvas_write(canvas, rel_row, rel_col, '|');
+    rel_col++;
 
-    for (int i = start_of_trunk; i < end_of_trunk; i++, scan_col++)
+    for (int i = start_of_trunk; i < end_of_trunk; i++, rel_col++)
     {
-        canvas_write(canvas, scan_row, scan_col, ' ');
+        canvas_write(canvas, rel_row, rel_col, ' ');
     }
-    canvas_write(canvas, scan_row, scan_col, '|');
-    scan_col++;
-    scan_row++;
+    canvas_write(canvas, rel_row, rel_col, '|');
+    rel_col++;
+    rel_row++;
 
-    scan_col = start_of_trunk - 1 - 1;
-    canvas_write(canvas, scan_row, scan_col, '[');
-    scan_col++;
-    for (int i = start_of_trunk - 1; i < end_of_trunk + 1; i++, scan_col++)
+    rel_col = start_of_trunk - 1 - 1;
+    canvas_write(canvas, rel_row, rel_col, '[');
+    rel_col++;
+    for (int i = start_of_trunk - 1; i < end_of_trunk + 1; i++, rel_col++)
     {
-        canvas_write(canvas, scan_row, scan_col, '_');
+        canvas_write(canvas, rel_row, rel_col, '_');
     }
-    canvas_write(canvas, scan_row, scan_col, ']');
-    scan_col++;
+    canvas_write(canvas, rel_row, rel_col, ']');
+    rel_col++;
+}
 
+void canvas_print(char canvas[CANVAS_HEIGHT][CANVAS_WIDTH])
+{
     for (int i = 0; i < CANVAS_HEIGHT; i++)
     {
         for (int j = 0; j < CANVAS_WIDTH; j++)
@@ -89,6 +77,17 @@ int main()
         }
         printf("\n");
     }
+}
+
+int main()
+{
+    char canvas[CANVAS_HEIGHT][CANVAS_WIDTH];
+
+    printf("Merry Christmas!\n");
+
+    canvas_wipe(canvas);
+    canvas_write_tree(canvas, 7);
+    canvas_print(canvas);
 
     return 0;
 }
