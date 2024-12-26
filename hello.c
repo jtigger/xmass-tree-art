@@ -16,11 +16,9 @@ int main() {
     printf("\n-----\n\n");
 
 
-    int height = 10;
-    int width = 2 * height - 1;
 
-    int CANVAS_HEIGHT = height + 2;
-    int CANVAS_WIDTH = width;
+    const int CANVAS_HEIGHT = 9;
+    const int CANVAS_WIDTH = 13;
 
     char canvas[CANVAS_HEIGHT][CANVAS_WIDTH];
 
@@ -29,6 +27,9 @@ int main() {
             canvas[i][j] = ' ';
         }
     }
+
+    int height = 7;
+    int width = 2 * height - 1;
 
     int scan_row=0;
 
