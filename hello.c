@@ -56,23 +56,25 @@ int main()
 
     Tree tree1 = {0, 0, 7, '.'};
     Tree tree2 = {11, 2, 6, '.'};
-    Tree tree3 = {3, 7, 10, '.'};
+    Tree tree3 = {-4, 6, 8, '.'};
+    Tree tree4 = {3, 7, 10, '.'};
     Tree tree1_lit = {0, 0, 7, '*'};
     Tree tree2_lit = {11, 2, 6, '*'};
-    Tree tree3_lit = {3, 7, 10, '*'};
+    Tree tree3_lit = {-4, 6, 8, '*'};
+    Tree tree4_lit = {3, 7, 10, '*'};
 
     FutureTree* the_beginning = start_with(tree1);
     FutureTree* then_next;
 
     then_next = and_then(the_beginning, 1000, tree2);
     then_next = and_then(then_next, 1000, tree3);
+    then_next = and_then(then_next, 1000, tree4);
     then_next = and_then(then_next, 2000, tree3_lit);
     then_next = and_then(then_next, 250, tree3);
     then_next = and_then(then_next, 2500, tree3_lit);
     then_next = and_then(then_next, 250, tree3);
     then_next = and_then(then_next, 3000, tree3_lit);
     then_next = and_then(then_next, 250, tree3);
-
 
     printf("Merry Christmas!\n\n");
 
