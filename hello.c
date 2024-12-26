@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <unistd.h>
 
 #define CANVAS_HEIGHT 20
 #define CANVAS_WIDTH 60
@@ -15,16 +16,21 @@ void canvas_write(char canvas[CANVAS_HEIGHT][CANVAS_WIDTH], int rel_row, int rel
 // Write a tree to the canvas at the given height.
 void canvas_write_tree(char canvas[CANVAS_HEIGHT][CANVAS_WIDTH], int x, int y, int height, char leaf_char);
 
+// Reposition the cursor to the top left corner of the canvas.
+void reset_cursor();
+
 int main()
 {
     char canvas[CANVAS_HEIGHT][CANVAS_WIDTH];
 
-    printf("Merry Christmas!\n");
+    printf("Merry Christmas!\n\n");
 
     canvas_wipe(canvas);
     canvas_write_tree(canvas, 0, 0, 7, '.');
     canvas_write_tree(canvas, 11, 2, 6, '@');
     canvas_write_tree(canvas, 3, 7, 10, '*');
+    canvas_print(canvas);
+    reset_cursor();
     canvas_print(canvas);
 
     return 0;
@@ -40,6 +46,12 @@ void canvas_print(char canvas[CANVAS_HEIGHT][CANVAS_WIDTH])
         }
         printf("\n");
     }
+}
+
+void reset_cursor()
+{
+    // ANSI escape sequence: move cursor CANVAS_HEIGHT lines up.
+    printf("\033[%dA", CANVAS_HEIGHT);
 }
 
 void canvas_wipe(char canvas[CANVAS_HEIGHT][CANVAS_WIDTH])
