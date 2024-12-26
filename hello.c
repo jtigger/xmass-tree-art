@@ -1,7 +1,7 @@
 #include <stdio.h>
 
-#define CANVAS_HEIGHT 9
-#define CANVAS_WIDTH 13
+#define CANVAS_HEIGHT 20
+#define CANVAS_WIDTH 60
 
 // Print the canvas to the console.
 void canvas_print(char canvas[CANVAS_HEIGHT][CANVAS_WIDTH]);
@@ -22,7 +22,9 @@ int main()
     printf("Merry Christmas!\n");
 
     canvas_wipe(canvas);
-    canvas_write_tree(canvas, 0, 0, 7, '*');
+    canvas_write_tree(canvas, 0, 0, 7, '.');
+    canvas_write_tree(canvas, 11, 2, 6, '@');
+    canvas_write_tree(canvas, 3, 7, 10, '*');
     canvas_print(canvas);
 
     return 0;
