@@ -51,37 +51,56 @@ void reset_cursor();
 // Play the sequence of future trees at the appropriate moments.
 void realize(char canvas[CANVAS_HEIGHT][CANVAS_WIDTH], FutureTree* future_tree);
 
-FutureTree* start_with(Tree tree);
 FutureTree* after(FutureTree* future_tree, int delay, Tree tree);
+FutureTree* plan_at(FutureTree* curr_tree, int moment, Tree tree);
+FutureTree* start_with(Tree tree);
+
+void blink(FutureTree* starting, Tree dark, Tree lit, int num_blinks, int avg_duration, int avg_delay) {
+    FutureTree* curr = starting;
+    for (int i = 0; i < num_blinks; i++) {
+        int duration = avg_duration + rand() % (2 * avg_duration / 2) - avg_duration / 2;
+        int delay = avg_delay + rand() % (2 * avg_delay / 2) - avg_delay / 2;
+
+        curr = after(curr, delay, lit);
+        curr = after(curr, duration, dark);
+    }
+}
 
 int main()
 {
     char canvas[CANVAS_HEIGHT][CANVAS_WIDTH];
 
+    Tree tree0 = {"tree0", 23, 3, 4, '.'};
     Tree tree1 = {"tree1", 0, 0, 7, '.'};
     Tree tree2 = {"tree2", 11, 2, 6, '.'};
     Tree tree3 = {"tree3", -4, 6, 8, '.'};
     Tree tree4 = {"tree4", 3, 7, 10, '.'};
     Tree tree5 = {"tree5", 30, 0, 20, '.'};
+    Tree tree0_lit = {"tree0", 23, 3, 4, '+'};
     Tree tree1_lit = {"tree1", 0, 0, 7, '*'};
-    Tree tree2_lit = {"tree2", 11, 2, 6, '*'};
+    Tree tree2_lit = {"tree2", 11, 2, 6, '@'};
     Tree tree3_lit = {"tree3", -4, 6, 8, '*'};
-    Tree tree4_lit = {"tree4", 3, 7, 10, '*'};
+    Tree tree4_lit = {"tree4", 3, 7, 10, '^'};
     Tree tree5_lit = {"tree5", 30, 0, 20, '*'};
 
-    FutureTree* the_beginning = start_with(tree1);
-    FutureTree* then_next;
+    FutureTree* the_beginning = start_with(tree0);
+    FutureTree* prev = the_beginning;
 
-    then_next = after(the_beginning, 1000, tree2);
-    then_next = after(then_next, 1000, tree3);
-    then_next = after(then_next, 1000, tree4);
-    then_next = after(then_next, 1000, tree5);
-    then_next = after(then_next, 2000, tree4_lit);
-    then_next = after(then_next, 250, tree4);
-    then_next = after(then_next, 2500, tree4_lit);
-    then_next = after(then_next, 250, tree4);
-    then_next = after(then_next, 3000, tree4_lit);
-    then_next = after(then_next, 250, tree4);
+    // Setup
+    prev = after(the_beginning, 100, tree1);
+    prev = after(prev, 100, tree2);
+    prev = after(prev, 100, tree3);
+    prev = after(prev, 100, tree4);
+    prev = after(prev, 100, tree5);
+    FutureTree* all_tress_present = prev;
+
+    blink(all_tress_present, tree0, tree0_lit, 20, 500, 2000);
+    blink(all_tress_present, tree1, tree1_lit, 20, 500, 2000);
+    blink(all_tress_present, tree2, tree2_lit, 20, 500, 2000);
+    blink(all_tress_present, tree3, tree3_lit, 20, 500, 2000);
+    blink(all_tress_present, tree4, tree4_lit, 20, 500, 2000);
+    blink(all_tress_present, tree5, tree5_lit, 20, 500, 2000);
+
 
     printf("Merry Christmas!\n\n");
 
@@ -228,18 +247,17 @@ void realize(char canvas[CANVAS_HEIGHT][CANVAS_WIDTH], FutureTree* future_tree)
     {
         if (now >= future_tree->when)
         {
-            trees = add_or_update_tree(trees, &future_tree->desired);
+            while (future_tree != NULL && now >= future_tree->when) {
+                trees = add_or_update_tree(trees, &future_tree->desired);
+                future_tree = future_tree->next;
+            }
             canvas_wipe(canvas);
             write_trees_on_canvas(canvas, trees);
             canvas_print(canvas);
             reset_cursor();
-            future_tree = future_tree->next;
         }
-        else
-        {
-            usleep(100000); // sleep for 100ms (takes macroseconds)
-            now += 100;
-        }
+        usleep(10000); // sleep for 50ms (takes macroseconds)
+        now += 10;
     }
 }
 
@@ -252,6 +270,7 @@ FutureTree* from(Tree tree, int delay)
     return first_tree;
 }
 
+ 
 FutureTree* start_with(Tree tree)
 {
     return from(tree, 0);
@@ -266,7 +285,7 @@ FutureTree* plan_at(FutureTree* curr_tree, int moment, Tree tree) {
         FutureTree* next_tree = from(tree, moment);
         next_tree->next = curr_tree->next;
         curr_tree->next = next_tree;
-        return curr_tree;
+        return next_tree;
     }
 
     return plan_at(curr_tree->next, moment, tree);
