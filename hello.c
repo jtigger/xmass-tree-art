@@ -70,7 +70,7 @@ int main()
 {
     char canvas[CANVAS_HEIGHT][CANVAS_WIDTH];
 
-    Tree tree0 = {"tree0", 23, 3, 4, '.'};
+    Tree tree0 = {"tree0", 23, 4, 4, '.'};
     Tree tree1 = {"tree1", 0, 0, 7, '.'};
     Tree tree2 = {"tree2", 11, 2, 6, '.'};
     Tree tree3 = {"tree3", -4, 6, 8, '.'};
@@ -94,12 +94,12 @@ int main()
     prev = after(prev, 100, tree5);
     FutureTree* all_tress_present = prev;
 
-    blink(all_tress_present, tree0, tree0_lit, 20, 500, 2000);
-    blink(all_tress_present, tree1, tree1_lit, 20, 500, 2000);
-    blink(all_tress_present, tree2, tree2_lit, 20, 500, 2000);
-    blink(all_tress_present, tree3, tree3_lit, 20, 500, 2000);
-    blink(all_tress_present, tree4, tree4_lit, 20, 500, 2000);
-    blink(all_tress_present, tree5, tree5_lit, 20, 500, 2000);
+    blink(all_tress_present, tree0, tree0_lit, 1000, 200, 1000);
+    blink(all_tress_present, tree1, tree1_lit, 1000, 500, 2000);
+    blink(all_tress_present, tree2, tree2_lit, 1000, 600, 2000);
+    blink(all_tress_present, tree3, tree3_lit, 1000, 700, 2000);
+    blink(all_tress_present, tree4, tree4_lit, 1000, 800, 2000);
+    blink(all_tress_present, tree5, tree5_lit, 1000, 1000, 4000);
 
 
     printf("Merry Christmas!\n\n");
