@@ -52,7 +52,7 @@ void reset_cursor();
 void realize(char canvas[CANVAS_HEIGHT][CANVAS_WIDTH], FutureTree* future_tree);
 
 FutureTree* start_with(Tree tree);
-FutureTree* and_then(FutureTree* future_tree, int delay, Tree tree);
+FutureTree* after(FutureTree* future_tree, int delay, Tree tree);
 
 int main()
 {
@@ -72,16 +72,16 @@ int main()
     FutureTree* the_beginning = start_with(tree1);
     FutureTree* then_next;
 
-    then_next = and_then(the_beginning, 1000, tree2);
-    then_next = and_then(then_next, 1000, tree3);
-    then_next = and_then(then_next, 1000, tree4);
-    then_next = and_then(then_next, 1000, tree5);
-    then_next = and_then(then_next, 2000, tree4_lit);
-    then_next = and_then(then_next, 250, tree4);
-    then_next = and_then(then_next, 2500, tree4_lit);
-    then_next = and_then(then_next, 250, tree4);
-    then_next = and_then(then_next, 3000, tree4_lit);
-    then_next = and_then(then_next, 250, tree4);
+    then_next = after(the_beginning, 1000, tree2);
+    then_next = after(then_next, 1000, tree3);
+    then_next = after(then_next, 1000, tree4);
+    then_next = after(then_next, 1000, tree5);
+    then_next = after(then_next, 2000, tree4_lit);
+    then_next = after(then_next, 250, tree4);
+    then_next = after(then_next, 2500, tree4_lit);
+    then_next = after(then_next, 250, tree4);
+    then_next = after(then_next, 3000, tree4_lit);
+    then_next = after(then_next, 250, tree4);
 
     printf("Merry Christmas!\n\n");
 
@@ -256,11 +256,24 @@ FutureTree* start_with(Tree tree)
 {
     return from(tree, 0);
 }
+FutureTree* plan_at(FutureTree* curr_tree, int moment, Tree tree) {
+    if (curr_tree->next == NULL) {
+        curr_tree->next = from(tree, moment);
+        return curr_tree->next;
+    }
 
-FutureTree* and_then(FutureTree* curr_tree, int delay, Tree tree)
+    if (moment < curr_tree->next->when) {
+        FutureTree* next_tree = from(tree, moment);
+        next_tree->next = curr_tree->next;
+        curr_tree->next = next_tree;
+        return curr_tree;
+    }
+
+    return plan_at(curr_tree->next, moment, tree);
+}
+
+FutureTree* after(FutureTree* curr_tree, int delay, Tree tree)
 {
-    FutureTree* next_future_tree = from(tree, curr_tree->when + delay);
-    curr_tree->next = next_future_tree;
-
-    return next_future_tree;
+    int moment = curr_tree->when + delay;
+    return plan_at(curr_tree, moment, tree);
 }
