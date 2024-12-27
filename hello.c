@@ -7,13 +7,36 @@
 #define CANVAS_HEIGHT 25
 #define CANVAS_WIDTH 60
 
+// ANSI color codes as integers
+#define RED     31
+#define GREEN   32
+#define YELLOW  33
+#define BLUE    34
+#define MAGENTA 35
+#define CYAN    36
+#define WHITE   37
+#define BRIGHT_RED     91
+#define BRIGHT_GREEN   92
+#define BRIGHT_YELLOW  93
+#define BRIGHT_BLUE    94
+#define BRIGHT_MAGENTA 95
+#define BRIGHT_CYAN    96
+#define BRIGHT_WHITE   97
+
+typedef struct
+{
+    char glyph;
+    int color;
+} Pixel;
+
+
 // Struct to represent a tree.
 typedef struct
 {
     char* id;        // unique identifier for the tree
     int x, y;        // position of the tree on the canvas
     int height;      // height of the leafy part of the tree
-    char leaf_char;  // character to use for the leaves
+    Pixel leaf_char;  // character to use for the leaves
 } Tree;
 
 typedef struct FutureTree FutureTree;
@@ -30,16 +53,16 @@ struct FutureTree
 // ==============
 
 // Print the canvas to the console.
-void canvas_print(char canvas[CANVAS_HEIGHT][CANVAS_WIDTH]);
+void canvas_print(Pixel canvas[CANVAS_HEIGHT][CANVAS_WIDTH]);
 
 // Set the canvas with spaces.
-void canvas_wipe(char canvas[CANVAS_HEIGHT][CANVAS_WIDTH]);
+void canvas_wipe(Pixel canvas[CANVAS_HEIGHT][CANVAS_WIDTH]);
 
 // Write a character to the canvas at the given position, if it is within the canvas bounds.
-void canvas_write(char canvas[CANVAS_HEIGHT][CANVAS_WIDTH], int rel_row, int rel_col, char c);
+void canvas_write(Pixel canvas[CANVAS_HEIGHT][CANVAS_WIDTH], int rel_row, int rel_col, Pixel pixel);
 
 // Write a tree to the canvas at the given height.
-void canvas_write_tree(char canvas[CANVAS_HEIGHT][CANVAS_WIDTH], Tree tree);
+void canvas_write_tree(Pixel canvas[CANVAS_HEIGHT][CANVAS_WIDTH], Tree tree);
 
 // Reposition the cursor to the top left corner of the canvas.
 void reset_cursor();
@@ -49,7 +72,7 @@ void reset_cursor();
 // ==============
 
 // Play the sequence of future trees at the appropriate moments.
-void realize(char canvas[CANVAS_HEIGHT][CANVAS_WIDTH], FutureTree* future_tree);
+void realize(Pixel canvas[CANVAS_HEIGHT][CANVAS_WIDTH], FutureTree* future_tree);
 
 FutureTree* after(FutureTree* future_tree, int delay, Tree tree);
 FutureTree* plan_at(FutureTree* curr_tree, int moment, Tree tree);
@@ -68,30 +91,34 @@ void blink(FutureTree* starting, Tree dark, Tree lit, int num_blinks, int avg_du
 
 int main()
 {
-    char canvas[CANVAS_HEIGHT][CANVAS_WIDTH];
+    Pixel canvas[CANVAS_HEIGHT][CANVAS_WIDTH];
 
-    Tree tree0 = {"tree0", 23, 4, 4, '.'};
-    Tree tree1 = {"tree1", 0, 0, 7, '.'};
-    Tree tree2 = {"tree2", 11, 2, 6, '.'};
-    Tree tree3 = {"tree3", -4, 6, 8, '.'};
-    Tree tree4 = {"tree4", 3, 7, 10, '.'};
-    Tree tree5 = {"tree5", 30, 0, 20, '.'};
-    Tree tree0_lit = {"tree0", 23, 3, 4, '+'};
-    Tree tree1_lit = {"tree1", 0, 0, 7, '*'};
-    Tree tree2_lit = {"tree2", 11, 2, 6, '@'};
-    Tree tree3_lit = {"tree3", -4, 6, 8, '*'};
-    Tree tree4_lit = {"tree4", 3, 7, 10, '^'};
-    Tree tree5_lit = {"tree5", 30, 0, 20, '*'};
+    Tree tree0 = {"tree0", 22, 4, 4, {'.', GREEN}};
+    Tree tree1 = {"tree1", 0, 0, 7, {'.', GREEN}};
+    Tree tree2 = {"tree2", 13, 2, 6, {'.', GREEN}};
+    Tree tree3 = {"tree3", -4, 7, 8, {'.', GREEN}};
+    Tree tree4 = {"tree4", 4, 4, 10, {'.', GREEN}};
+    Tree tree5 = {"tree5", 54, 2, 4, {'.', GREEN}};
+    Tree tree6 = {"tree6", 30, 0, 20, {'.', GREEN}};
+    Tree tree0_lit = {"tree0", 22, 3, 4, {'+', BLUE}};
+    Tree tree1_lit = {"tree1", 0, 0, 7, {'*', MAGENTA}};
+    Tree tree2_lit = {"tree2", 13, 2, 6, {'@', CYAN}};
+    Tree tree3_lit = {"tree3", -4, 7, 8, {'*', BRIGHT_WHITE}};
+    Tree tree4_lit = {"tree4", 4, 4, 10, {'^', BRIGHT_RED}};
+    Tree tree5_lit = {"tree5", 54, 2, 4, {'$', BRIGHT_YELLOW}};
+    Tree tree6_lit = {"tree6", 30, 0, 20, {'*', BRIGHT_WHITE}};
+
 
     FutureTree* the_beginning = start_with(tree0);
     FutureTree* prev = the_beginning;
 
     // Setup
-    prev = after(the_beginning, 100, tree1);
-    prev = after(prev, 100, tree2);
-    prev = after(prev, 100, tree3);
-    prev = after(prev, 100, tree4);
-    prev = after(prev, 100, tree5);
+    prev = after(the_beginning, 1000, tree1);
+    prev = after(prev, 1000, tree5);
+    prev = after(prev, 1000, tree2);
+    prev = after(prev, 1000, tree3);
+    prev = after(prev, 1000, tree6);
+    prev = after(prev, 1000, tree4);
     FutureTree* all_tress_present = prev;
 
     blink(all_tress_present, tree0, tree0_lit, 1000, 200, 1000);
@@ -100,7 +127,7 @@ int main()
     blink(all_tress_present, tree3, tree3_lit, 1000, 700, 2000);
     blink(all_tress_present, tree4, tree4_lit, 1000, 800, 2000);
     blink(all_tress_present, tree5, tree5_lit, 1000, 1000, 4000);
-
+    blink(all_tress_present, tree6, tree6_lit, 1000, 400, 3000);
 
     printf("Merry Christmas!\n\n");
 
@@ -109,13 +136,13 @@ int main()
     return 0;
 }
 
-void canvas_print(char canvas[CANVAS_HEIGHT][CANVAS_WIDTH])
+void canvas_print(Pixel canvas[CANVAS_HEIGHT][CANVAS_WIDTH])
 {
     for (int i = 0; i < CANVAS_HEIGHT; i++)
     {
         for (int j = 0; j < CANVAS_WIDTH; j++)
         {
-            printf("%c", canvas[i][j]);
+            printf("\033[%dm%c\033[0m", canvas[i][j].color, canvas[i][j].glyph);
         }
         printf("\n");
     }
@@ -127,26 +154,26 @@ void reset_cursor()
     printf("\033[%dA", CANVAS_HEIGHT);
 }
 
-void canvas_wipe(char canvas[CANVAS_HEIGHT][CANVAS_WIDTH])
+void canvas_wipe(Pixel canvas[CANVAS_HEIGHT][CANVAS_WIDTH])
 {
     for (int i = 0; i < CANVAS_HEIGHT; i++)
     {
         for (int j = 0; j < CANVAS_WIDTH; j++)
         {
-            canvas[i][j] = ' ';
+            canvas[i][j] = (Pixel){' ', 0};
         }
     }
 }
 
-void canvas_write(char canvas[CANVAS_HEIGHT][CANVAS_WIDTH], int rel_row, int rel_col, char c)
+void canvas_write(Pixel canvas[CANVAS_HEIGHT][CANVAS_WIDTH], int rel_row, int rel_col, Pixel pixel)
 {
     if (rel_row >= 0 && rel_row < CANVAS_HEIGHT && rel_col >= 0 && rel_col < CANVAS_WIDTH)
     {
-        canvas[rel_row][rel_col] = c;
+        canvas[rel_row][rel_col] = pixel;
     }
 }
 
-void canvas_write_tree(char canvas[CANVAS_HEIGHT][CANVAS_WIDTH], Tree tree)
+void canvas_write_tree(Pixel canvas[CANVAS_HEIGHT][CANVAS_WIDTH], Tree tree)
 {
     int width = 2 * tree.height - 1;
 
@@ -168,25 +195,25 @@ void canvas_write_tree(char canvas[CANVAS_HEIGHT][CANVAS_WIDTH], Tree tree)
 
     int rel_col = start_of_trunk - 1;
 
-    canvas_write(canvas, rel_row + tree.y, rel_col + tree.x, '|');
+    canvas_write(canvas, rel_row + tree.y, rel_col + tree.x, (Pixel){'|', YELLOW});
     rel_col++;
 
     for (int i = start_of_trunk; i < end_of_trunk; i++, rel_col++)
     {
-        canvas_write(canvas, rel_row + tree.y, rel_col + tree.x, ' ');
+        canvas_write(canvas, rel_row + tree.y, rel_col + tree.x, (Pixel){' ', YELLOW});
     }
-    canvas_write(canvas, rel_row + tree.y, rel_col + tree.x, '|');
+    canvas_write(canvas, rel_row + tree.y, rel_col + tree.x, (Pixel){'|', YELLOW});
     rel_col++;
     rel_row++;
 
     rel_col = start_of_trunk - 1 - 1;
-    canvas_write(canvas, rel_row + tree.y, rel_col + tree.x, '[');
+    canvas_write(canvas, rel_row + tree.y, rel_col + tree.x, (Pixel){'[', RED});
     rel_col++;
     for (int i = start_of_trunk - 1; i < end_of_trunk + 1; i++, rel_col++)
     {
-        canvas_write(canvas, rel_row + tree.y, rel_col + tree.x, '_');
+        canvas_write(canvas, rel_row + tree.y, rel_col + tree.x, (Pixel){'_', RED});
     }
-    canvas_write(canvas, rel_row + tree.y, rel_col + tree.x, ']');
+    canvas_write(canvas, rel_row + tree.y, rel_col + tree.x, (Pixel){']', RED});
     rel_col++;
 }
 
@@ -230,7 +257,7 @@ TreeOnCanvas* add_or_update_tree(TreeOnCanvas* trees, Tree *tree) {
     return trees;
 }
 
-void write_trees_on_canvas(char canvas[CANVAS_HEIGHT][CANVAS_WIDTH], TreeOnCanvas* trees) {
+void write_trees_on_canvas(Pixel canvas[CANVAS_HEIGHT][CANVAS_WIDTH], TreeOnCanvas* trees) {
     TreeOnCanvas* curr = trees;
     while (curr != NULL) {
         canvas_write_tree(canvas, *curr->tree);
@@ -238,7 +265,7 @@ void write_trees_on_canvas(char canvas[CANVAS_HEIGHT][CANVAS_WIDTH], TreeOnCanva
     }
 }
 
-void realize(char canvas[CANVAS_HEIGHT][CANVAS_WIDTH], FutureTree* future_tree)
+void realize(Pixel canvas[CANVAS_HEIGHT][CANVAS_WIDTH], FutureTree* future_tree)
 {
     int now = 0; // time in ms since the start
     TreeOnCanvas* trees = NULL;
@@ -256,8 +283,8 @@ void realize(char canvas[CANVAS_HEIGHT][CANVAS_WIDTH], FutureTree* future_tree)
             canvas_print(canvas);
             reset_cursor();
         }
-        usleep(10000); // sleep for 50ms (takes macroseconds)
-        now += 10;
+        usleep(50000); // sleep for 50ms (takes macroseconds)
+        now += 50;
     }
 }
 
