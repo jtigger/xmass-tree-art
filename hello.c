@@ -1,13 +1,16 @@
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <unistd.h>
 
-#define CANVAS_HEIGHT 20
+#define CANVAS_HEIGHT 25
 #define CANVAS_WIDTH 60
 
 // Struct to represent a tree.
 typedef struct
 {
+    char* id;        // unique identifier for the tree
     int x, y;        // position of the tree on the canvas
     int height;      // height of the leafy part of the tree
     char leaf_char;  // character to use for the leaves
@@ -20,6 +23,7 @@ struct FutureTree
     int when;                // when (in ms since the start) this state should be applied to the canvas
     FutureTree* next; // the next state to be applied to the canvas
 };
+
 
 // ==============
 // = Canvas
@@ -54,14 +58,16 @@ int main()
 {
     char canvas[CANVAS_HEIGHT][CANVAS_WIDTH];
 
-    Tree tree1 = {0, 0, 7, '.'};
-    Tree tree2 = {11, 2, 6, '.'};
-    Tree tree3 = {-4, 6, 8, '.'};
-    Tree tree4 = {3, 7, 10, '.'};
-    Tree tree1_lit = {0, 0, 7, '*'};
-    Tree tree2_lit = {11, 2, 6, '*'};
-    Tree tree3_lit = {-4, 6, 8, '*'};
-    Tree tree4_lit = {3, 7, 10, '*'};
+    Tree tree1 = {"tree1", 0, 0, 7, '.'};
+    Tree tree2 = {"tree2", 11, 2, 6, '.'};
+    Tree tree3 = {"tree3", -4, 6, 8, '.'};
+    Tree tree4 = {"tree4", 3, 7, 10, '.'};
+    Tree tree5 = {"tree5", 30, 0, 20, '.'};
+    Tree tree1_lit = {"tree1", 0, 0, 7, '*'};
+    Tree tree2_lit = {"tree2", 11, 2, 6, '*'};
+    Tree tree3_lit = {"tree3", -4, 6, 8, '*'};
+    Tree tree4_lit = {"tree4", 3, 7, 10, '*'};
+    Tree tree5_lit = {"tree5", 30, 0, 20, '*'};
 
     FutureTree* the_beginning = start_with(tree1);
     FutureTree* then_next;
@@ -69,16 +75,16 @@ int main()
     then_next = and_then(the_beginning, 1000, tree2);
     then_next = and_then(then_next, 1000, tree3);
     then_next = and_then(then_next, 1000, tree4);
-    then_next = and_then(then_next, 2000, tree3_lit);
-    then_next = and_then(then_next, 250, tree3);
-    then_next = and_then(then_next, 2500, tree3_lit);
-    then_next = and_then(then_next, 250, tree3);
-    then_next = and_then(then_next, 3000, tree3_lit);
-    then_next = and_then(then_next, 250, tree3);
+    then_next = and_then(then_next, 1000, tree5);
+    then_next = and_then(then_next, 2000, tree4_lit);
+    then_next = and_then(then_next, 250, tree4);
+    then_next = and_then(then_next, 2500, tree4_lit);
+    then_next = and_then(then_next, 250, tree4);
+    then_next = and_then(then_next, 3000, tree4_lit);
+    then_next = and_then(then_next, 250, tree4);
 
     printf("Merry Christmas!\n\n");
 
-    canvas_wipe(canvas);
     realize(canvas, the_beginning);
 
     return 0;
@@ -165,22 +171,73 @@ void canvas_write_tree(char canvas[CANVAS_HEIGHT][CANVAS_WIDTH], Tree tree)
     rel_col++;
 }
 
+
+typedef struct TreeOnCanvas TreeOnCanvas;
+struct TreeOnCanvas
+{
+    Tree* tree;
+    TreeOnCanvas* next;
+};
+
+TreeOnCanvas* place(Tree *tree) {
+    TreeOnCanvas* tree_on_canvas = (TreeOnCanvas*)malloc(sizeof(TreeOnCanvas));
+    tree_on_canvas->tree = tree;
+    tree_on_canvas->next = NULL;
+    return tree_on_canvas;
+}
+
+TreeOnCanvas* add_or_update_tree(TreeOnCanvas* trees, Tree *tree) {
+    if (trees == NULL) {
+        return place(tree);
+    }
+
+    TreeOnCanvas* curr = trees;
+
+    bool found = false;
+    TreeOnCanvas* prev = curr;
+    while (curr != NULL && !found) {
+        if (strcmp(curr->tree->id, tree->id) == 0) {
+            curr->tree = tree;
+            found = true;
+        }
+        prev = curr;
+        curr = curr->next;
+    }
+
+    if (!found) {
+        prev->next = place(tree);
+    }
+
+    return trees;
+}
+
+void write_trees_on_canvas(char canvas[CANVAS_HEIGHT][CANVAS_WIDTH], TreeOnCanvas* trees) {
+    TreeOnCanvas* curr = trees;
+    while (curr != NULL) {
+        canvas_write_tree(canvas, *curr->tree);
+        curr = curr->next;
+    }
+}
+
 void realize(char canvas[CANVAS_HEIGHT][CANVAS_WIDTH], FutureTree* future_tree)
 {
-    int now = 0;
+    int now = 0; // time in ms since the start
+    TreeOnCanvas* trees = NULL;
 
     while (future_tree != NULL)
     {
         if (now >= future_tree->when)
         {
-            canvas_write_tree(canvas, future_tree->desired);
+            trees = add_or_update_tree(trees, &future_tree->desired);
+            canvas_wipe(canvas);
+            write_trees_on_canvas(canvas, trees);
             canvas_print(canvas);
             reset_cursor();
             future_tree = future_tree->next;
         }
         else
         {
-            usleep(100000);
+            usleep(100000); // sleep for 100ms (takes macroseconds)
             now += 100;
         }
     }
