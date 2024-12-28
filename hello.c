@@ -72,7 +72,7 @@ void reset_cursor();
 // ==============
 
 // Play the sequence of future trees at the appropriate moments.
-void realize(Pixel canvas[CANVAS_HEIGHT][CANVAS_WIDTH], FutureTree* future_tree);
+void realize(Pixel canvas[CANVAS_HEIGHT][CANVAS_WIDTH], FutureTree* future_tree, int frame_rate);
 
 FutureTree* after(FutureTree* future_tree, int delay, Tree tree);
 FutureTree* plan_at(FutureTree* curr_tree, int moment, Tree tree);
@@ -108,27 +108,31 @@ FutureTree* grow(FutureTree* curr_tree, Tree tree, int duration) {
     return curr_tree;
 }
 
-int main()
-{
-    Pixel canvas[CANVAS_HEIGHT][CANVAS_WIDTH];
+Tree new_tree_with_pixel(Tree new_tree, Pixel pixel) {
+    Tree tree = new_tree;
+    tree.leaf_char = pixel;
+    return tree;
+}
 
-    Tree tree0 = {"tree0", 23, 5, 4, {'.', GREEN}};
-    Tree tree1 = {"tree1", 7, 7, 7, {'.', GREEN}};
-    Tree tree2 = {"tree2", 22, 12, 6, {'.', GREEN}};
-    Tree tree3 = {"tree3", 4, 14, 8, {'.', GREEN}};
-    Tree tree4 = {"tree4", 14, 17, 10, {'.', GREEN}};
-    Tree tree5 = {"tree5", 58, 6, 4, {'.', GREEN}};
-    Tree tree6 = {"tree6", 50, 20, 20, {'.', GREEN}};
-    Tree tree0_lit = {"tree0", 23, 5, 4, {'+', BLUE}};
-    Tree tree1_lit = {"tree1", 7, 7, 7, {'*', MAGENTA}};
-    Tree tree2_lit = {"tree2", 22, 12, 6, {'@', CYAN}};
-    Tree tree3_lit = {"tree3", 4, 14, 8, {'*', BRIGHT_WHITE}};
-    Tree tree4_lit = {"tree4", 14, 17, 10, {'^', BRIGHT_RED}};
-    Tree tree5_lit = {"tree5", 58, 6, 4, {'$', BRIGHT_YELLOW}};
-    Tree tree6_lit = {"tree6", 50, 20, 20, {'*', BRIGHT_WHITE}};
+FutureTree* build_scene() {
+    Pixel green_leaf = (Pixel){'.', GREEN};
+
+    Tree tree0 = {"tree0", 23, 5, 4, green_leaf};
+    Tree tree1 = {"tree1", 7, 7, 7, green_leaf};
+    Tree tree2 = {"tree2", 22, 12, 6, green_leaf};
+    Tree tree3 = {"tree3", 4, 14, 8, green_leaf};
+    Tree tree4 = {"tree4", 14, 17, 10, green_leaf};
+    Tree tree5 = {"tree5", 58, 6, 4, green_leaf};
+    Tree tree6 = {"tree6", 50, 20, 20, green_leaf};
+    Tree tree0_lit = new_tree_with_pixel(tree0, (Pixel){'+', BLUE});
+    Tree tree1_lit = new_tree_with_pixel(tree1, (Pixel){'*', MAGENTA});
+    Tree tree2_lit = new_tree_with_pixel(tree2, (Pixel){'@', CYAN});
+    Tree tree3_lit = new_tree_with_pixel(tree3, (Pixel){'*', BRIGHT_WHITE});
+    Tree tree4_lit = new_tree_with_pixel(tree4, (Pixel){'^', BRIGHT_RED});
+    Tree tree5_lit = new_tree_with_pixel(tree5, (Pixel){'$', BRIGHT_YELLOW});
+    Tree tree6_lit = new_tree_with_pixel(tree6, (Pixel){'*', BRIGHT_WHITE});
 
     FutureTree* the_beginning = start_with(tree0);
-    FutureTree* prev = the_beginning;
 
     // Setup
     FutureTree* tree1_adult = grow(the_beginning, tree1, 1000);
@@ -146,9 +150,16 @@ int main()
     blink(tree5_adult, tree5, tree5_lit, 1000, 1000, 4000);
     blink(tree6_adult, tree6, tree6_lit, 1000, 400, 3000);
 
-    printf("Merry Christmas!\n\n");
+    return the_beginning;
+}
 
-    realize(canvas, the_beginning);
+int main()
+{
+    Pixel canvas[CANVAS_HEIGHT][CANVAS_WIDTH];
+    FutureTree* the_beginning = build_scene();
+
+    printf("Merry Christmas!\n\n");
+    realize(canvas, the_beginning, 10);
 
     return 0;
 }
@@ -286,9 +297,10 @@ void write_trees_on_canvas(Pixel canvas[CANVAS_HEIGHT][CANVAS_WIDTH], TreeOnCanv
     }
 }
 
-void realize(Pixel canvas[CANVAS_HEIGHT][CANVAS_WIDTH], FutureTree* future_tree)
+void realize(Pixel canvas[CANVAS_HEIGHT][CANVAS_WIDTH], FutureTree* future_tree, int frame_rate)
 {
     int now = 0; // time in ms since the start
+    int ms_between_frames = 1000 / frame_rate;
     TreeOnCanvas* trees = NULL;
 
     while (future_tree != NULL)
@@ -304,8 +316,8 @@ void realize(Pixel canvas[CANVAS_HEIGHT][CANVAS_WIDTH], FutureTree* future_tree)
             canvas_print(canvas);
             reset_cursor();
         }
-        usleep(50000); // sleep for 50ms (takes macroseconds)
-        now += 50;
+        usleep(ms_between_frames * 1000);
+        now += ms_between_frames;
     }
 }
 
