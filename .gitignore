@@ -6,6 +6,7 @@
 
 # Ignore symbol files
 *.dSYM
+*.o
 
 # ignore the hello executable
 hello

@@ -1,120 +1,30 @@
+#include "canvas.h"
+#include "scene.h"
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 
-#define CANVAS_HEIGHT 25
-#define CANVAS_WIDTH 60
+// build_scene() constructs the Christmas tree scene.
+SceneEvent* build_scene();
 
-// ANSI color codes as integers
-#define RED     31
-#define GREEN   32
-#define YELLOW  33
-#define BLUE    34
-#define MAGENTA 35
-#define CYAN    36
-#define WHITE   37
-#define BRIGHT_RED     91
-#define BRIGHT_GREEN   92
-#define BRIGHT_YELLOW  93
-#define BRIGHT_BLUE    94
-#define BRIGHT_MAGENTA 95
-#define BRIGHT_CYAN    96
-#define BRIGHT_WHITE   97
-
-typedef struct
+int main()
 {
-    char glyph;  // character to display
-    int color;   // ANSI color code
-} Pixel;
+    Pixel canvas[CANVAS_HEIGHT][CANVAS_WIDTH];
+    SceneEvent* xmas_scene = build_scene();
 
+    printf("Merry Christmas!\n\n");
+    realize(canvas, xmas_scene, 10);
 
-// Struct to represent a tree.
-typedef struct
-{
-    char* id;         // unique identifier for the tree
-    int x, y;         // position of the left-side of the trunk of the tree on the canvas
-    int height;       // height of the leafy part of the tree
-    Pixel leaf_char;  // character to use for the leaves
-} Tree;
-
-typedef struct FutureTree FutureTree;
-struct FutureTree
-{
-    Tree desired;     // the to-be state of the tree
-    int when;         // when (in ms since the start) this state should be applied to the canvas
-    FutureTree* next; // the next state to be applied to the canvas
-};
-
-
-// ==============
-// = Canvas
-// ==============
-
-// Print the canvas to the console.
-void canvas_print(Pixel canvas[CANVAS_HEIGHT][CANVAS_WIDTH]);
-
-// Set the canvas with spaces.
-void canvas_wipe(Pixel canvas[CANVAS_HEIGHT][CANVAS_WIDTH]);
-
-// Write a character to the canvas at the given position, if it is within the canvas bounds.
-void canvas_write(Pixel canvas[CANVAS_HEIGHT][CANVAS_WIDTH], int rel_row, int rel_col, Pixel pixel);
-
-// Write a tree to the canvas at the given height.
-void canvas_write_tree(Pixel canvas[CANVAS_HEIGHT][CANVAS_WIDTH], Tree tree);
-
-// Reposition the cursor to the top left corner of the canvas.
-void reset_cursor();
-
-// ==============
-// = Realizer
-// ==============
-
-// Play the sequence of future trees at the appropriate moments.
-void realize(Pixel canvas[CANVAS_HEIGHT][CANVAS_WIDTH], FutureTree* future_tree, int frame_rate);
-
-FutureTree* after(FutureTree* future_tree, int delay, Tree tree);
-FutureTree* plan_at(FutureTree* curr_tree, int moment, Tree tree);
-FutureTree* start_with(Tree tree);
-
-// ==============
-// = Plan authoring "macros"
-// ==============
-
-void blink(FutureTree* starting, Tree dark, Tree lit, int num_blinks, int avg_duration, int avg_delay) {
-    FutureTree* curr = starting;
-    for (int i = 0; i < num_blinks; i++) {
-        int duration = avg_duration + rand() % (2 * avg_duration / 2) - avg_duration / 2;
-        int delay = avg_delay + rand() % (2 * avg_delay / 2) - avg_delay / 2;
-
-        curr = after(curr, delay, lit);
-        curr = after(curr, duration, dark);
-    }
+    return 0;
 }
 
-FutureTree* grow(FutureTree* curr_tree, Tree tree, int duration) {
-    int frames = duration / 100;
-    float height_increment = (float)tree.height / frames;
+void blink(SceneEvent* starting, Tree dark, Tree lit, int num_blinks, int avg_duration, int avg_delay);
+SceneEvent* grow(SceneEvent* curr_tree, Tree tree, int duration);
+Tree new_tree_with_pixel(Tree new_tree, Pixel pixel);
 
-    Tree growing_tree = tree;
-    float growing_height = 1.0;
-    for (int i = 0; i < frames; i++) {
-        growing_height += height_increment;
-        growing_tree.height = growing_height;
-        curr_tree = after(curr_tree, 100, growing_tree);
-    }
-
-    return curr_tree;
-}
-
-Tree new_tree_with_pixel(Tree new_tree, Pixel pixel) {
-    Tree tree = new_tree;
-    tree.leaf_char = pixel;
-    return tree;
-}
-
-FutureTree* build_scene() {
+SceneEvent* build_scene() {
     Pixel green_leaf = (Pixel){'.', GREEN};
 
     Tree tree0 = {"tree0", 23, 5, 4, green_leaf};
@@ -132,15 +42,15 @@ FutureTree* build_scene() {
     Tree tree5_lit = new_tree_with_pixel(tree5, (Pixel){'$', BRIGHT_YELLOW});
     Tree tree6_lit = new_tree_with_pixel(tree6, (Pixel){'*', BRIGHT_WHITE});
 
-    FutureTree* the_beginning = start_with(tree0);
+    SceneEvent* the_beginning = start_with(tree0);
 
     // Setup
-    FutureTree* tree1_adult = grow(the_beginning, tree1, 1000);
-    FutureTree* tree5_adult = grow(the_beginning, tree5, 9000);
-    FutureTree* tree2_adult = grow(the_beginning, tree2, 3000);
-    FutureTree* tree3_adult = grow(the_beginning, tree3, 5000);
-    FutureTree* tree6_adult = grow(the_beginning, tree6, 10000);
-    FutureTree* tree4_adult = grow(the_beginning, tree4, 6000);
+    SceneEvent* tree1_adult = grow(the_beginning, tree1, 1000);
+    SceneEvent* tree5_adult = grow(the_beginning, tree5, 9000);
+    SceneEvent* tree2_adult = grow(the_beginning, tree2, 3000);
+    SceneEvent* tree3_adult = grow(the_beginning, tree3, 5000);
+    SceneEvent* tree6_adult = grow(the_beginning, tree6, 10000);
+    SceneEvent* tree4_adult = grow(the_beginning, tree4, 6000);
 
     blink(the_beginning, tree0, tree0_lit, 1000, 200, 1000);
     blink(tree1_adult, tree1, tree1_lit, 1000, 500, 2000);
@@ -153,207 +63,37 @@ FutureTree* build_scene() {
     return the_beginning;
 }
 
-int main()
-{
-    Pixel canvas[CANVAS_HEIGHT][CANVAS_WIDTH];
-    FutureTree* the_beginning = build_scene();
+// Adds Events to the Scene that causes the tree to blink on and off.
+void blink(SceneEvent* starting, Tree dark, Tree lit, int num_blinks, int avg_duration, int avg_delay) {
+    SceneEvent* curr = starting;
+    for (int i = 0; i < num_blinks; i++) {
+        int duration = avg_duration + rand() % (2 * avg_duration / 2) - avg_duration / 2;
+        int delay = avg_delay + rand() % (2 * avg_delay / 2) - avg_delay / 2;
 
-    printf("Merry Christmas!\n\n");
-    realize(canvas, the_beginning, 10);
-
-    return 0;
-}
-
-void canvas_print(Pixel canvas[CANVAS_HEIGHT][CANVAS_WIDTH])
-{
-    for (int i = 0; i < CANVAS_HEIGHT; i++)
-    {
-        for (int j = 0; j < CANVAS_WIDTH; j++)
-        {
-            printf("\033[%dm%c\033[0m", canvas[i][j].color, canvas[i][j].glyph);
-        }
-        printf("\n");
+        curr = after(curr, delay, lit);
+        curr = after(curr, duration, dark);
     }
 }
 
-void reset_cursor()
-{
-    // ANSI escape sequence: move cursor CANVAS_HEIGHT lines up.
-    printf("\033[%dA", CANVAS_HEIGHT);
+// Adds Events to the Scene that causes the tree to grow.
+SceneEvent* grow(SceneEvent* curr_tree, Tree tree, int duration) {
+    int frames = duration / 100;
+    float height_increment = (float)tree.height / frames;
+
+    Tree growing_tree = tree;
+    float growing_height = 1.0;
+    for (int i = 0; i < frames; i++) {
+        growing_height += height_increment;
+        growing_tree.height = growing_height;
+        curr_tree = after(curr_tree, 100, growing_tree);
+    }
+
+    return curr_tree;
 }
 
-void canvas_wipe(Pixel canvas[CANVAS_HEIGHT][CANVAS_WIDTH])
-{
-    for (int i = 0; i < CANVAS_HEIGHT; i++)
-    {
-        for (int j = 0; j < CANVAS_WIDTH; j++)
-        {
-            canvas[i][j] = (Pixel){' ', 0};
-        }
-    }
-}
-
-void canvas_write(Pixel canvas[CANVAS_HEIGHT][CANVAS_WIDTH], int rel_row, int rel_col, Pixel pixel)
-{
-    if (rel_row >= 0 && rel_row < CANVAS_HEIGHT && rel_col >= 0 && rel_col < CANVAS_WIDTH)
-    {
-        canvas[rel_row][rel_col] = pixel;
-    }
-}
-
-void canvas_write_tree(Pixel canvas[CANVAS_HEIGHT][CANVAS_WIDTH], Tree tree)
-{
-    int width = 2 * tree.height - 1;
-    // tree.x, tree.y is top-left of the trunk (to ensure the trunk is stable as tree grows)
-    // x, y is the top-left corner of the painting of the tree
-    int x = tree.x - width / 2;
-    int y = tree.y - tree.height + 1;
-
-    int rel_row = 0;
-
-    for (rel_row = 0; rel_row < tree.height; rel_row++)
-    {
-        int tree_pixels = 2 * rel_row + 1;
-        int rel_col = tree.height - rel_row - 1;
-        for (int j = 0; j < tree_pixels; j++, rel_col++)
-        {
-            canvas_write(canvas, rel_row + y, rel_col + x, tree.leaf_char);
-        }
-    }
-
-    int start_of_trunk = (width - 1) / 2;
-    int thickness_of_trunk = tree.height / 5;
-    int end_of_trunk = start_of_trunk + thickness_of_trunk;
-
-    int rel_col = start_of_trunk - 1;
-
-    canvas_write(canvas, rel_row + y, rel_col + x, (Pixel){'|', YELLOW});
-    rel_col++;
-
-    for (int i = start_of_trunk; i < end_of_trunk; i++, rel_col++)
-    {
-        canvas_write(canvas, rel_row + y, rel_col + x, (Pixel){' ', YELLOW});
-    }
-    canvas_write(canvas, rel_row + y, rel_col + x, (Pixel){'|', YELLOW});
-    rel_col++;
-    rel_row++;
-
-    rel_col = start_of_trunk - 1 - 1;
-    canvas_write(canvas, rel_row + y, rel_col + x, (Pixel){'[', RED});
-    rel_col++;
-    for (int i = start_of_trunk - 1; i < end_of_trunk + 1; i++, rel_col++)
-    {
-        canvas_write(canvas, rel_row + y, rel_col + x, (Pixel){'_', RED});
-    }
-    canvas_write(canvas, rel_row + y, rel_col + x, (Pixel){']', RED});
-    rel_col++;
-}
-
-
-typedef struct TreeOnCanvas TreeOnCanvas;
-struct TreeOnCanvas
-{
-    Tree* tree;
-    TreeOnCanvas* next;
-};
-
-TreeOnCanvas* place(Tree *tree) {
-    TreeOnCanvas* tree_on_canvas = (TreeOnCanvas*)malloc(sizeof(TreeOnCanvas));
-    tree_on_canvas->tree = tree;
-    tree_on_canvas->next = NULL;
-    return tree_on_canvas;
-}
-
-TreeOnCanvas* add_or_update_tree(TreeOnCanvas* trees, Tree *tree) {
-    if (trees == NULL) {
-        return place(tree);
-    }
-
-    TreeOnCanvas* curr = trees;
-
-    bool found = false;
-    TreeOnCanvas* prev = curr;
-    while (curr != NULL && !found) {
-        if (strcmp(curr->tree->id, tree->id) == 0) {
-            curr->tree = tree;
-            found = true;
-        }
-        prev = curr;
-        curr = curr->next;
-    }
-
-    if (!found) {
-        prev->next = place(tree);
-    }
-
-    return trees;
-}
-
-void write_trees_on_canvas(Pixel canvas[CANVAS_HEIGHT][CANVAS_WIDTH], TreeOnCanvas* trees) {
-    TreeOnCanvas* curr = trees;
-    while (curr != NULL) {
-        canvas_write_tree(canvas, *curr->tree);
-        curr = curr->next;
-    }
-}
-
-void realize(Pixel canvas[CANVAS_HEIGHT][CANVAS_WIDTH], FutureTree* future_tree, int frame_rate)
-{
-    int now = 0; // time in ms since the start
-    int ms_between_frames = 1000 / frame_rate;
-    TreeOnCanvas* trees = NULL;
-
-    while (future_tree != NULL)
-    {
-        if (now >= future_tree->when)
-        {
-            while (future_tree != NULL && now >= future_tree->when) {
-                trees = add_or_update_tree(trees, &future_tree->desired);
-                future_tree = future_tree->next;
-            }
-            canvas_wipe(canvas);
-            write_trees_on_canvas(canvas, trees);
-            canvas_print(canvas);
-            reset_cursor();
-        }
-        usleep(ms_between_frames * 1000);
-        now += ms_between_frames;
-    }
-}
-
-FutureTree* from(Tree tree, int delay)
-{
-    FutureTree* first_tree = (FutureTree*)malloc(sizeof(FutureTree));
-    first_tree->desired = tree;
-    first_tree->when = delay;
-    first_tree->next = NULL;
-    return first_tree;
-}
-
- 
-FutureTree* start_with(Tree tree)
-{
-    return from(tree, 0);
-}
-
-FutureTree* plan_at(FutureTree* curr_tree, int moment, Tree tree) {
-    if (curr_tree->next == NULL) {
-        curr_tree->next = from(tree, moment);
-        return curr_tree->next;
-    }
-
-    if (moment < curr_tree->next->when) {
-        FutureTree* next_tree = from(tree, moment);
-        next_tree->next = curr_tree->next;
-        curr_tree->next = next_tree;
-        return next_tree;
-    }
-
-    return plan_at(curr_tree->next, moment, tree);
-}
-
-FutureTree* after(FutureTree* curr_tree, int delay, Tree tree)
-{
-    int moment = curr_tree->when + delay;
-    return plan_at(curr_tree, moment, tree);
+// Makes a copy of Tree with a different pixel.
+Tree new_tree_with_pixel(Tree new_tree, Pixel pixel) {
+    Tree tree = new_tree;
+    tree.leaf_char = pixel;
+    return tree;
 }
