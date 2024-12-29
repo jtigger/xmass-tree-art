@@ -1,30 +1,8 @@
 #include "canvas.h"
 
-CanvasLayer* add_or_update_tree(CanvasLayer* trees, Tree *tree) {
-    if (trees == NULL) {
-        return new_layer(tree);
-    }
-
-    CanvasLayer* curr = trees;
-
-    bool found = false;
-    CanvasLayer* prev = curr;
-    while (curr != NULL && !found) {
-        if (strcmp(curr->tree->id, tree->id) == 0) {
-            curr->tree = tree;
-            found = true;
-        }
-        prev = curr;
-        curr = curr->next;
-    }
-
-    if (!found) {
-        prev->next = new_layer(tree);
-    }
-
-    return trees;
-}
-
+// ==============================
+// = Canvas functions
+// ===  
 
 void canvas_print(Pixel canvas[CANVAS_HEIGHT][CANVAS_WIDTH]) {
     for (int i = 0; i < CANVAS_HEIGHT; i++) {
@@ -33,10 +11,6 @@ void canvas_print(Pixel canvas[CANVAS_HEIGHT][CANVAS_WIDTH]) {
         }
         printf("\n");
     }
-}
-
-void reset_cursor() {
-    printf("\033[%dA", CANVAS_HEIGHT);
 }
 
 void canvas_wipe(Pixel canvas[CANVAS_HEIGHT][CANVAS_WIDTH]) {
@@ -64,7 +38,7 @@ void canvas_write_tree(Pixel canvas[CANVAS_HEIGHT][CANVAS_WIDTH], Tree tree) {
         int tree_pixels = 2 * rel_row + 1;
         int rel_col = tree.height - rel_row - 1;
         for (int j = 0; j < tree_pixels; j++, rel_col++) {
-            canvas_write(canvas, rel_row + y, rel_col + x, tree.leaf_char);
+            canvas_write(canvas, rel_row + y, rel_col + x, tree.fill);
         }
     }
 
@@ -94,6 +68,41 @@ void canvas_write_tree(Pixel canvas[CANVAS_HEIGHT][CANVAS_WIDTH], Tree tree) {
     rel_col++;
 } 
 
+void reset_cursor() {
+    printf("\033[%dA", CANVAS_HEIGHT);
+}
+
+
+// ==============================
+// = CanvasLayer functions
+// ===
+
+CanvasLayer* add_or_update_tree(CanvasLayer* layers, Tree *tree) {
+    if (layers == NULL) {
+        return new_layer(tree);
+    }
+
+    CanvasLayer* curr = layers;
+
+    bool found = false;
+    CanvasLayer* prev = curr;
+    while (curr != NULL && !found) {
+        if (strcmp(curr->tree->id, tree->id) == 0) {
+            curr->tree = tree;
+            found = true;
+        }
+        prev = curr;
+        curr = curr->next;
+    }
+
+    if (!found) {
+        prev->next = new_layer(tree);
+    }
+
+    return layers;
+}
+
+
 CanvasLayer* new_layer(Tree *tree) {
     CanvasLayer* tree_on_canvas = (CanvasLayer*)malloc(sizeof(CanvasLayer));
     tree_on_canvas->tree = tree;
@@ -101,8 +110,8 @@ CanvasLayer* new_layer(Tree *tree) {
     return tree_on_canvas;
 }
 
-void write_layers_on_canvas(Pixel canvas[CANVAS_HEIGHT][CANVAS_WIDTH], CanvasLayer* trees) {
-    CanvasLayer* curr = trees;
+void write_layers_on_canvas(Pixel canvas[CANVAS_HEIGHT][CANVAS_WIDTH], CanvasLayer* layers) {
+    CanvasLayer* curr = layers;
     while (curr != NULL) {
         canvas_write_tree(canvas, *curr->tree);
         curr = curr->next;
