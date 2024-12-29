@@ -34,7 +34,7 @@ SceneEvent* build_scene() {
     Tree tree4_dark = {"tree4", 14, 17, 10, green_leaf};
     Tree tree5_dark = {"tree5", 58, 6, 4, green_leaf};
     Tree tree6_dark = {"tree6", 50, 20, 20, green_leaf};
-    Tree tree0_lit = new_tree_with_pixel(tree0_dark, (Pixel){'+', BLUE});
+    Tree tree0_lit = {"tree0", 23, 4, 4, (Pixel){'+', BLUE}};
     Tree tree1_lit = new_tree_with_pixel(tree1_dark, (Pixel){'*', MAGENTA});
     Tree tree2_lit = new_tree_with_pixel(tree2_dark, (Pixel){'@', CYAN});
     Tree tree3_lit = new_tree_with_pixel(tree3_dark, (Pixel){'*', BRIGHT_WHITE});
@@ -45,19 +45,19 @@ SceneEvent* build_scene() {
     SceneEvent* xmas_scene = start_with(tree0_dark);
 
     // Setup
-    SceneEvent* tree1_adult = grow_tree(xmas_scene, tree1_dark, 1000);
-    SceneEvent* tree5_adult = grow_tree(xmas_scene, tree5_dark, 9000);
-    SceneEvent* tree2_adult = grow_tree(xmas_scene, tree2_dark, 3000);
-    SceneEvent* tree3_adult = grow_tree(xmas_scene, tree3_dark, 5000);
+    grow_tree(xmas_scene, tree1_dark, 6000);
+    grow_tree(xmas_scene, tree5_dark, 9000);
+    grow_tree(xmas_scene, tree2_dark, 8000);
+    grow_tree(xmas_scene, tree3_dark, 5000);
     SceneEvent* tree6_adult = grow_tree(xmas_scene, tree6_dark, 10000);
-    SceneEvent* tree4_adult = grow_tree(xmas_scene, tree4_dark, 6000);
+    grow_tree(xmas_scene, tree4_dark, 6000);
 
-    blink(xmas_scene, tree0_dark, tree0_lit, 1000, 200, 1000);
-    blink(tree1_adult, tree1_dark, tree1_lit, 1000, 500, 2000);
-    blink(tree2_adult, tree2_dark, tree2_lit, 1000, 600, 2000);
-    blink(tree3_adult, tree3_dark, tree3_lit, 1000, 700, 2000);
-    blink(tree4_adult, tree4_dark, tree4_lit, 1000, 800, 2000);
-    blink(tree5_adult, tree5_dark, tree5_lit, 1000, 1000, 4000);
+    blink(tree6_adult, tree0_dark, tree0_lit, 1000, 200, 1000);
+    blink(tree6_adult, tree1_dark, tree1_lit, 1000, 500, 2000);
+    blink(tree6_adult, tree2_dark, tree2_lit, 1000, 600, 2000);
+    blink(tree6_adult, tree3_dark, tree3_lit, 1000, 700, 2000);
+    blink(tree6_adult, tree4_dark, tree4_lit, 1000, 800, 2000);
+    blink(tree6_adult, tree5_dark, tree5_lit, 1000, 1000, 4000);
     blink(tree6_adult, tree6_dark, tree6_lit, 1000, 400, 3000);
 
     return xmas_scene;
