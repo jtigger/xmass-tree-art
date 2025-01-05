@@ -4,18 +4,25 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 #include <unistd.h>
+
+// Idiomatic way to get the size of an array.
+#define ARRAY_SIZE(x) (sizeof(x) / sizeof((x)[0]))
 
 // build_scene() constructs the Christmas tree scene.
 SceneEvent* build_scene();
 
 int main()
 {
+    int seed = time(NULL);
+    srand(seed);
+
     Pixel canvas[CANVAS_HEIGHT][CANVAS_WIDTH];
     SceneEvent* xmas_scene = build_scene();
 
     printf("Merry Christmas!\n\n");
-    scene_play(xmas_scene, canvas, 10);
+    scene_play(xmas_scene, canvas, 30);
 
     return 0;
 }
@@ -25,40 +32,45 @@ SceneEvent* grow_tree(SceneEvent* curr_tree, Tree tree, int duration);
 Tree new_tree_with_pixel(Tree new_tree, Pixel pixel);
 
 SceneEvent* build_scene() {
+    int num_trees = 7 + rand() % 100;
     Pixel green_leaf = (Pixel){'.', GREEN};
+    char lights[6] = {'+', '@', '*', '^', '$', '='};
+    int light_colors[6] = {WHITE, BLUE, CYAN, MAGENTA, BRIGHT_RED, BRIGHT_YELLOW};
 
-    Tree tree0_dark = {"tree0", 23, 5, 4, green_leaf};
-    Tree tree1_dark = {"tree1", 7, 7, 7, green_leaf};
-    Tree tree2_dark = {"tree2", 22, 12, 6, green_leaf};
-    Tree tree3_dark = {"tree3", 4, 14, 8, green_leaf};
-    Tree tree4_dark = {"tree4", 14, 17, 10, green_leaf};
-    Tree tree5_dark = {"tree5", 58, 6, 4, green_leaf};
-    Tree tree6_dark = {"tree6", 50, 20, 20, green_leaf};
-    Tree tree0_lit = {"tree0", 23, 4, 4, (Pixel){'+', BLUE}};
-    Tree tree1_lit = new_tree_with_pixel(tree1_dark, (Pixel){'*', MAGENTA});
-    Tree tree2_lit = new_tree_with_pixel(tree2_dark, (Pixel){'@', CYAN});
-    Tree tree3_lit = new_tree_with_pixel(tree3_dark, (Pixel){'*', BRIGHT_WHITE});
-    Tree tree4_lit = new_tree_with_pixel(tree4_dark, (Pixel){'^', BRIGHT_RED});
-    Tree tree5_lit = new_tree_with_pixel(tree5_dark, (Pixel){'$', BRIGHT_YELLOW});
-    Tree tree6_lit = new_tree_with_pixel(tree6_dark, (Pixel){'*', BRIGHT_WHITE});
+    Tree trees_dark[num_trees];
+    Tree trees_lit[num_trees];
 
-    SceneEvent* xmas_scene = start_with(tree0_dark);
+    int biggest_y = 1;
+    int max_y_increment = 2 + CANVAS_HEIGHT / num_trees;
+    for (int i = 0; i < num_trees; i++) {
+        char *id = malloc(10);
+        sprintf(id, "tree%d", i);
+
+        int height = 4 + rand() % 8;
+        int x = rand() % (CANVAS_WIDTH);
+        int y = biggest_y = biggest_y + (rand() % max_y_increment);
+        char light = lights[rand() % ARRAY_SIZE(light_colors)];
+        int light_color = light_colors[rand() % (ARRAY_SIZE(light_colors) + 1)];
+
+        trees_dark[i] = (Tree){.id = id, .x = x, .y = y, .height = height, .fill = green_leaf};
+        trees_lit[i] = new_tree_with_pixel(trees_dark[i], (Pixel){light, light_color});
+    }
+
+    SceneEvent* xmas_scene = start_with(trees_dark[0]);
 
     // Setup
-    grow_tree(xmas_scene, tree1_dark, 6000);
-    grow_tree(xmas_scene, tree5_dark, 9000);
-    grow_tree(xmas_scene, tree2_dark, 8000);
-    grow_tree(xmas_scene, tree3_dark, 5000);
-    SceneEvent* tree6_adult = grow_tree(xmas_scene, tree6_dark, 10000);
-    grow_tree(xmas_scene, tree4_dark, 6000);
+    SceneEvent* last_tree_grown;
+    for (int i = 1; i < num_trees; i++) {
+        int grow_duration = 5000 + rand() % 5000;
+        last_tree_grown = grow_tree(xmas_scene, trees_dark[i], grow_duration);
+    }
 
-    blink(tree6_adult, tree0_dark, tree0_lit, 1000, 200, 1000);
-    blink(tree6_adult, tree1_dark, tree1_lit, 1000, 500, 2000);
-    blink(tree6_adult, tree2_dark, tree2_lit, 1000, 600, 2000);
-    blink(tree6_adult, tree3_dark, tree3_lit, 1000, 700, 2000);
-    blink(tree6_adult, tree4_dark, tree4_lit, 1000, 800, 2000);
-    blink(tree6_adult, tree5_dark, tree5_lit, 1000, 1000, 4000);
-    blink(tree6_adult, tree6_dark, tree6_lit, 1000, 400, 3000);
+    for (int i = 0; i < num_trees; i++) {
+        int blink_duration = 200 + rand() % 8000;
+        int blink_delay = 1000 + rand() % 3000;
+
+        blink(last_tree_grown, trees_dark[i], trees_lit[i], 1000, blink_duration, blink_delay);
+    }
 
     return xmas_scene;
 }

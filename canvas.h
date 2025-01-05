@@ -7,8 +7,8 @@
 #include <string.h>
 #include <unistd.h>
 
-#define CANVAS_HEIGHT 25
-#define CANVAS_WIDTH 60
+#define CANVAS_HEIGHT 50
+#define CANVAS_WIDTH 200
 
 // ANSI color codes as integers
 #define RED     31
